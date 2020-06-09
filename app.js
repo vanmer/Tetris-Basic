@@ -135,13 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function moveLeft() {
     undraw();
     const isAtLeftEdge = current.some(index => (currentPosition + index) % width === 0);
-
     if (!isAtLeftEdge) currentPosition -= 1;
-
     if (current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
       currentPosition += 1;
     }
-
     draw();
   }
 
@@ -149,14 +146,37 @@ document.addEventListener('DOMContentLoaded', () => {
   function moveRight() {
     undraw();
     const isAtRightEdge = current.some(index => (currentPosition + index) % width === width - 1);
-
     if (!isAtRightEdge) currentPosition += 1;
-
     if (current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
       currentPosition -= 1;
     }
-
     draw();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // fix rotation of Tetrominos at the edge
+  function isAtRight() {
+    return current.some(index => (currentPosition + index + 1) % width === 0)
+  }
+
+  function isAtLeft() {
+    return current.some(index => (currentPosition + index) % width === 0)
+  }
+
+  function checkRotatedPosition(P) {
+    P = P || currentPosition;     // get the current position, then check if the piece is near the left side
+    if ((P+1) % width < 4) {      // add 1 because the position index can be 1 less than where the piece is (with how they are indexed)
+      if (isAtRight()) {          // use actual position to check if it's flipped over to the right side
+        currentPosition += 1;     // if so, add one to wrap it back around
+        checkRotatedPosition(P);  // check again, pass position from start, since long block might need to move more
+      }
+    }
+    else if (P % width > 5) {
+      if (isAtLeft()) {
+        currentPosition -= 1;
+        checkRotatedPosition(P);
+      }
+    }
   }
 
   // rotate the Tetromino
@@ -167,13 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
       currentRotation = 0;
     }
     current = theTetrominoes[random][currentRotation];
+    checkRotatedPosition();   // run checkRotatedPosition function
     draw();
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   // show up-next Tetromino in mini-grid
   const displaySquares = document.querySelectorAll('.mini-grid div');
   const displayWidth = 4;
-  let displayIndex = 0;
+  const displayIndex = 0;
 
 
   // the Tetronimos without rotations
@@ -194,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
       square.classList.remove('tetromino');
       square.style.backgroundColor = '';
     });
-
     upNextTetrominoes[nextRandom].forEach( index => {
       displaySquares[displayIndex + index].classList.add('tetromino');
       displaySquares[displayIndex + index].style.backgroundColor = colors[nextRandom];
@@ -218,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function addScore() {
     for (let i = 0; i < 199; i += width) {
       const row = [i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9];
-
       if (row.every(index => squares[index].classList.contains('taken'))) {
         score += 10;
         scoreDisplay.innerHTML = score;
@@ -241,8 +262,5 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInterval(timerId);
     }
   }
-
-
-
 
 })
