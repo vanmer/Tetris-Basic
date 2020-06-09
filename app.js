@@ -213,9 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay.innerHTML = score;
         row.forEach(index => {
           squares[index].classList.remove('taken');
+          squares[index].classList.remove('tetromino');
         })
         const squaresRemoved = squares.splice(i, width);
-        console.log(squaresRemoved);
+        squares = squaresRemoved.concat(squares);
+        squares.forEach(cell => grid.appendChild(cell));
       }
     }
   }
